@@ -138,8 +138,8 @@ export const login = createAsyncThunk<User, AuthData, { extra: Extra }>(
 export const logout = createAsyncThunk<void, undefined, { extra: Extra }>(
   `${NameSpace.User}/logout`,
   async (_arg, { extra }) => {
-    const { api } = extra;
-    await api.delete(APIRoute.Logout);
+    // const { api } = extra;
+    // await api.delete(APIRoute.Logout);
     dropToken();
   }
 );
@@ -190,17 +190,30 @@ export const registerUser = createAsyncThunk<void, NewUser, { extra: Extra }>(
   `${NameSpace.User}/register`,
   async ({ email, password, name, avatar }, { extra }) => {
     const { api } = extra;
-    const { data } = await api.post<{ id: string }>(APIRoute.Register, {
+    await api.post<{ id: string }>(APIRoute.Register, {
       email,
       password,
       name,
     });
+
+    const { data } = await api.post<User & { token: Token }>(
+      APIRoute.Login,
+      {
+        email,
+        password,
+      }
+    );
+    const { token } = data;
+    saveToken(token);
+
     if (avatar) {
       const payload = new FormData();
       payload.append('avatar', avatar);
-      await api.post(`users/${data.id}${APIRoute.Avatar}`, payload, {
+      await api.post(`users${APIRoute.Avatar}`, payload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
     }
+
+    dropToken();
   }
 );
