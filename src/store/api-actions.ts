@@ -10,7 +10,7 @@ import { APIRoute, DEFAULT_GENRE, NameSpace } from '../const';
 import { User } from '../types/user';
 import { NewUser } from '../types/new-user';
 import { dropToken, saveToken } from '../services/token';
-import { adaptsUser } from './adapter';
+import { adaptsResponseToUser, adaptsFilmToRequest, adaptsResponseToFilm } from './adapter';
 
 type Extra = {
   api: AxiosInstance;
@@ -22,7 +22,7 @@ export const fetchFilms = createAsyncThunk<Film[], undefined, { extra: Extra }>(
     const { api } = extra;
     const { data } = await api.get<Film[]>(APIRoute.Films);
 
-    return data;
+    return data.map(adaptsResponseToFilm);
   }
 );
 
@@ -38,7 +38,7 @@ export const fetchFilmsByGenre = createAsyncThunk<
   }
   const { data } = await api.get<Film[]>(route);
 
-  return data;
+  return data.map(adaptsResponseToFilm);
 });
 
 export const fetchFilm = createAsyncThunk<Film, string, { extra: Extra }>(
@@ -47,7 +47,7 @@ export const fetchFilm = createAsyncThunk<Film, string, { extra: Extra }>(
     const { api } = extra;
     const { data } = await api.get<Film>(`${APIRoute.Films}/${id}`);
 
-    return data;
+    return adaptsResponseToFilm(data);
   }
 );
 
@@ -57,10 +57,10 @@ export const editFilm = createAsyncThunk<Film, Film, { extra: Extra }>(
     const { api } = extra;
     const { data } = await api.patch<Film>(
       `${APIRoute.Films}/${filmData.id}`,
-      filmData
+      adaptsFilmToRequest(filmData)
     );
 
-    return data;
+    return adaptsResponseToFilm(data);
   }
 );
 
@@ -68,9 +68,9 @@ export const addFilm = createAsyncThunk<Film, NewFilm, { extra: Extra }>(
   `${NameSpace.Film}/addFilm`,
   async (filmData, { extra }) => {
     const { api } = extra;
-    const { data } = await api.post<Film>(APIRoute.Films, filmData);
+    const { data } = await api.post<Film>(APIRoute.Films, adaptsFilmToRequest(filmData));
 
-    return data;
+    return adaptsResponseToFilm(data);
   }
 );
 
@@ -80,7 +80,7 @@ export const deleteFilm = createAsyncThunk<Film, string, { extra: Extra }>(
     const { api } = extra;
     const { data } = await api.delete<Film>(`${APIRoute.Films}/${id}`);
 
-    return data;
+    return adaptsResponseToFilm(data);
   }
 );
 
@@ -112,7 +112,7 @@ export const checkAuth = createAsyncThunk<User, undefined, { extra: Extra }>(
     const { api } = extra;
     try {
       const { data } = await api.get<User>(APIRoute.Login);
-      return adaptsUser(data);
+      return adaptsResponseToUser(data);
     } catch (error) {
       dropToken();
       return Promise.reject(error);
@@ -132,8 +132,7 @@ export const login = createAsyncThunk<User, AuthData, { extra: Extra }>(
     const { token } = data;
     saveToken(token);
 
-    // return data;
-    return adaptsUser(data);
+    return adaptsResponseToUser(data);
   }
 );
 
@@ -152,7 +151,7 @@ export const fetchFavoriteFilms = createAsyncThunk<
   const { api } = extra;
   const { data } = await api.get<Film[]>(APIRoute.Favorite);
 
-  return data;
+  return data.map(adaptsResponseToFilm);
 });
 
 export const fetchPromo = createAsyncThunk<Film, undefined, { extra: Extra }>(
@@ -161,7 +160,7 @@ export const fetchPromo = createAsyncThunk<Film, undefined, { extra: Extra }>(
     const { api } = extra;
     const { data } = await api.get<Film>(APIRoute.Promo);
 
-    return data;
+    return adaptsResponseToFilm(data);
   }
 );
 
