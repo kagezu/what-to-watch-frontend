@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Film } from '../types/film.js';
+import { Review } from '../types/review.js';
 import { User } from '../types/user.js';
 
 export const adaptsResponseToUser = (data: any): User => {
@@ -13,7 +14,6 @@ export const adaptsResponseToUser = (data: any): User => {
 };
 
 export const adaptsFilmToRequest = (data: any) => {
-
   const result = {
     ...data,
     actors: data.starring,
@@ -27,7 +27,6 @@ export const adaptsFilmToRequest = (data: any) => {
 };
 
 export const adaptsResponseToFilm = (data: any): Film => {
-
   const result = {
     ...data,
     starring: data.actors,
@@ -40,3 +39,23 @@ export const adaptsResponseToFilm = (data: any): Film => {
 
   return result;
 };
+
+export const adaptsReviewToRequest = (data: any) => {
+  const result = {
+    ...data,
+    text: data.comment
+  };
+  delete result['comment'];
+
+  return result;
+};
+
+export const adaptsResponseToReview = (data: any): Review => ({
+  comment: data.text,
+  date: data.released,
+  id: data.id,
+  rating: data.rating,
+  user: {
+    name: data.author.name
+  }
+});

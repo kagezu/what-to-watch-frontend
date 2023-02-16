@@ -10,7 +10,7 @@ import { APIRoute, DEFAULT_GENRE, NameSpace } from '../const';
 import { User } from '../types/user';
 import { NewUser } from '../types/new-user';
 import { dropToken, saveToken } from '../services/token';
-import { adaptsResponseToUser, adaptsFilmToRequest, adaptsResponseToFilm } from './adapter';
+import { adaptsResponseToUser, adaptsFilmToRequest, adaptsResponseToFilm, adaptsResponseToReview, adaptsReviewToRequest } from './adapter';
 
 type Extra = {
   api: AxiosInstance;
@@ -92,7 +92,7 @@ export const fetchReviews = createAsyncThunk<
   const { api } = extra;
   const { data } = await api.get<Review[]>(`${APIRoute.Comments}/${id}`);
 
-  return data;
+  return data.map(adaptsResponseToReview);
 });
 
 export const postReview = createAsyncThunk<
@@ -101,9 +101,9 @@ export const postReview = createAsyncThunk<
   { extra: Extra }
 >(`${NameSpace.Reviews}/postReview`, async ({ id, review }, { extra }) => {
   const { api } = extra;
-  const { data } = await api.post<Review>(`${APIRoute.Comments}/${id}`, review);
+  const { data } = await api.post<Review>(`${APIRoute.Comments}/${id}`, adaptsReviewToRequest(review));
 
-  return data;
+  return adaptsResponseToReview(data);
 });
 
 export const checkAuth = createAsyncThunk<User, undefined, { extra: Extra }>(
@@ -168,9 +168,9 @@ export const setFavorite = createAsyncThunk<Film, Film['id'], { extra: Extra }>(
   `${NameSpace.FavoriteFilms}/setFavorite`,
   async (id, { extra }) => {
     const { api } = extra;
-    const { data } = await api.post<Film>(`${APIRoute.Favorite}/${id}`);
+    const { data } = await api.post<Film>(`${APIRoute.Favorite}/${id}/1`);
 
-    return data;
+    return adaptsResponseToFilm(data);
   }
 );
 
@@ -180,9 +180,9 @@ export const unsetFavorite = createAsyncThunk<
   { extra: Extra }
 >(`${NameSpace.FavoriteFilms}/unsetFavorite`, async (id, { extra }) => {
   const { api } = extra;
-  const { data } = await api.delete<Film>(`${APIRoute.Favorite}/${id}`);
+  const { data } = await api.post<Film>(`${APIRoute.Favorite}/${id}/0`);
 
-  return data;
+  return adaptsResponseToFilm(data);
 });
 
 export const registerUser = createAsyncThunk<void, NewUser, { extra: Extra }>(
