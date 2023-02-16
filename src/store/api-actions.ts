@@ -10,6 +10,7 @@ import { APIRoute, DEFAULT_GENRE, NameSpace } from '../const';
 import { User } from '../types/user';
 import { NewUser } from '../types/new-user';
 import { dropToken, saveToken } from '../services/token';
+import { adaptsUser } from './adapter';
 
 type Extra = {
   api: AxiosInstance;
@@ -111,7 +112,7 @@ export const checkAuth = createAsyncThunk<User, undefined, { extra: Extra }>(
     const { api } = extra;
     try {
       const { data } = await api.get<User>(APIRoute.Login);
-      return data;
+      return adaptsUser(data);
     } catch (error) {
       dropToken();
       return Promise.reject(error);
@@ -131,15 +132,14 @@ export const login = createAsyncThunk<User, AuthData, { extra: Extra }>(
     const { token } = data;
     saveToken(token);
 
-    return data;
+    // return data;
+    return adaptsUser(data);
   }
 );
 
 export const logout = createAsyncThunk<void, undefined, { extra: Extra }>(
   `${NameSpace.User}/logout`,
-  async (_arg, { extra }) => {
-    // const { api } = extra;
-    // await api.delete(APIRoute.Logout);
+  async (_arg) => {
     dropToken();
   }
 );
